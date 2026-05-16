@@ -525,20 +525,81 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 <div class="toast" id="toast"></div>
 
 <script>
-const KEY = 'contratistas_mobile_v2';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpRdRs0BPOQo4elMBcbcLJbzaDVBaFu5ZoJ_73IGeQPGHo5r4Qp_xRgHIU2mcXEy_CLg/exec';
 let db = { contratistas: [], valores: [], pagos: [] };
 let currentPage = 'resumen';
 let confirmCallback = null;
+let saveTimeout = null;
+
+function showLoader(msg) {
+  let el = document.getElementById('sync-loader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sync-loader';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:var(--accent);color:#0f0f0f;font-size:12px;font-weight:600;text-align:center;padding:6px;letter-spacing:0.5px;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideLoader() {
+  const el = document.getElementById('sync-loader');
+  if (el) el.style.display = 'none';
+}
+
+// Serializar db a filas para cada tabla
+function dbToRows(table) {
+  if (table === 'contratistas') return db.contratistas.map(c => [c.id, c.nombre, c.oficio||'', c.telefono||'', c.notas||'']);
+  if (table === 'valores') return db.valores.map(v => [v.id, v.cid, v.fecha, v.monto, v.descripcion||'']);
+  if (table === 'pagos') return db.pagos.map(p => [p.id, p.cid, p.fecha, p.monto, p.medio||'', p.ref||'', p.descripcion||'']);
+  return [];
+}
+
+function rowsToDb(table, rows) {
+  if (!rows || rows.length === 0) return;
+  // Filtrar filas vacías
+  rows = rows.filter(r => r[0] && r[0].toString().trim() !== '');
+  if (table === 'contratistas') db.contratistas = rows.map(r => ({ id:r[0], nombre:r[1], oficio:r[2], telefono:r[3], notas:r[4] }));
+  if (table === 'valores') db.valores = rows.map(r => ({ id:r[0], cid:r[1], fecha:r[2], monto:Number(r[3]), descripcion:r[4] }));
+  if (table === 'pagos') db.pagos = rows.map(r => ({ id:r[0], cid:r[1], fecha:r[2], monto:Number(r[3]), medio:r[4], ref:r[5], descripcion:r[6] }));
+}
+
+async function gasGet(table) {
+  const res = await fetch(`${GAS_URL}?table=${table}`);
+  const data = await res.json();
+  return data.rows || [];
+}
+
+async function gasPost(table) {
+  const rows = dbToRows(table);
+  await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'save', table, rows })
+  });
+}
 
 async function load() {
+  showLoader('⟳ Cargando datos...');
   try {
-    const r = await window.storage.get(KEY);
-    if (r && r.value) db = JSON.parse(r.value);
-  } catch(e) {}
+    const [rc, rv, rp] = await Promise.all([gasGet('contratistas'), gasGet('valores'), gasGet('pagos')]);
+    rowsToDb('contratistas', rc);
+    rowsToDb('valores', rv);
+    rowsToDb('pagos', rp);
+  } catch(e) {
+    toast('Sin conexión — modo local', 'error');
+  }
+  hideLoader();
   renderAll();
 }
+
 async function save() {
-  try { await window.storage.set(KEY, JSON.stringify(db)); } catch(e) {}
+  showLoader('↑ Guardando...');
+  try {
+    await Promise.all([gasPost('contratistas'), gasPost('valores'), gasPost('pagos')]);
+  } catch(e) {
+    toast('Error al guardar', 'error');
+  }
+  hideLoader();
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
