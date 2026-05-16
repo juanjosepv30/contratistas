@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f0f">
+<title>Mis Contratistas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --bg2: #1a1a1a;
+  --bg3: #242424;
+  --bg4: #2e2e2e;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f0f0;
+  --text2: #888;
+  --text3: #555;
+  --accent: #c8f04d;
+  --accent-dim: rgba(200,240,77,0.12);
+  --accent-dark: #9fc22a;
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.12);
+  --green: #4dcc7a;
+  --green-dim: rgba(77,204,122,0.12);
+  --blue: #5b9cf6;
+  --blue-dim: rgba(91,156,246,0.12);
+  --orange: #f5a623;
+  --orange-dim: rgba(245,166,35,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+}
+
+/* LAYOUT */
+.app { display: flex; flex-direction: column; height: 100dvh; }
+.header {
+  flex-shrink: 0;
+  padding: 54px 20px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+.header-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.header-title span { color: var(--accent); }
+.main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+.nav {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 calc(8px + var(--safe-bottom));
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  padding: 6px 2px; font-family: inherit; transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.nav-btn span { font-size: 10px; font-weight: 500; }
+
+/* PAGES */
+.page { display: none; padding: 0 16px 24px; }
+.page.active { display: block; }
+
+/* CARDS & SECTIONS */
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: var(--text3); text-transform: uppercase; margin: 20px 0 10px; }
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.card-sm { padding: 12px 14px; }
+
+/* METRICS */
+.metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.metric {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.metric-value { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; }
+.metric-value.accent { color: var(--accent); }
+.metric-value.green { color: var(--green); }
+.metric-value.red { color: var(--red); }
+.metric-value.blue { color: var(--blue); }
+.metric-big {
+  background: linear-gradient(135deg, rgba(200,240,77,0.08) 0%, transparent 60%);
+  border-color: rgba(200,240,77,0.2);
+  grid-column: 1/-1;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.metric-big .metric-value { font-size: 28px; }
+
+/* CONTRATISTA CARD */
+.cont-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  active: background: var(--bg3);
+}
+.cont-card:active { background: var(--bg3); border-color: var(--border2); }
+.cont-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: var(--accent);
+  flex-shrink: 0;
+}
+.cont-name { font-weight: 600; font-size: 15px; }
+.cont-oficio { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  margin-left: auto;
+}
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-orange { background: var(--orange-dim); color: var(--orange); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-blue { background: var(--blue-dim); color: var(--blue); }
+.progress-wrap { margin-bottom: 8px; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+.progress-bar { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.cont-nums { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+.cont-num { text-align: center; }
+.cont-num-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+.cont-num-label { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+/* FORMS */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: block; }
+input, select, textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  padding: 13px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: none; min-height: 80px; line-height: 1.5; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* BUTTONS */
+.btn {
+  width: 100%; padding: 15px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: -0.2px;
+}
+.btn:active { transform: scale(0.98); opacity: 0.85; }
+.btn-accent { background: var(--accent); color: #0f0f0f; }
+.btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-red { background: var(--red-dim); color: var(--red); border: 1px solid transparent; }
+.btn-sm { padding: 9px 14px; font-size: 13px; width: auto; border-radius: var(--radius-sm); }
+.btn-icon { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+/* HISTORIAL ITEM */
+.hist-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 15px;
+  margin-bottom: 8px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.hist-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.hist-icon.pago { background: var(--green-dim); }
+.hist-icon.valor { background: var(--blue-dim); }
+.hist-body { flex: 1; min-width: 0; }
+.hist-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hist-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-amount { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+.hist-amount.pago { color: var(--green); }
+.hist-amount.valor { color: var(--blue); }
+.hist-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.hist-desc { font-size: 12px; color: var(--text3); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* MODALS / SHEETS */
+.sheet-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+.sheet-overlay.open { display: flex; }
+.sheet {
+  width: 100%;
+  background: var(--bg2);
+  border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 0 0 calc(16px + var(--safe-bottom));
+  max-height: 92dvh;
+  overflow-y: auto;
+  animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle { width: 36px; height: 4px; background: var(--bg4); border-radius: 2px; margin: 12px auto 4px; }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 0; }
+.sheet-title { font-size: 17px; font-weight: 600; }
+.sheet-body { padding: 16px 20px 0; }
+.sheet-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg3); border: none; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; font-family: inherit;
+}
+
+/* ALERTS */
+.toast {
+  position: fixed; bottom: calc(80px + var(--safe-bottom));
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.25s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(77,204,122,0.4); color: var(--green); }
+.toast.error { border-color: rgba(255,95,95,0.4); color: var(--red); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty svg { margin: 0 auto 12px; display: block; opacity: 0.3; }
+.empty p { font-size: 14px; }
+
+/* DETAIL VIEW */
+.detail-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 16px 0;
+}
+.back-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+
+/* CONFIRM DIALOG */
+.confirm-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  width: 100%;
+  max-width: 320px;
+}
+.confirm-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.confirm-msg { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+.confirm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-row">
+      <div class="header-title">Mis <span>Contratistas</span></div>
+      <button class="btn btn-accent btn-sm" id="fab-add" onclick="openAddSheet()" style="width:auto;">+ Agregar</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-content">
+
+    <!-- PÁGINA: RESUMEN -->
+    <div class="page active" id="page-resumen">
+      <div class="metrics-row">
+        <div class="metric metric-big">
+          <div>
+            <div class="metric-label">Saldo total pendiente</div>
+            <div class="metric-value accent" id="m-saldo">$0</div>
+          </div>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--accent);opacity:0.6"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total acordado</div>
+          <div class="metric-value blue" id="m-total">$0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total pagado</div>
+          <div class="metric-value green" id="m-pagado">$0</div>
+        </div>
+      </div>
+
+      <div class="section-label">Contratistas</div>
+      <div id="lista-resumen"></div>
+    </div>
+
+    <!-- PÁGINA: HISTORIAL -->
+    <div class="page" id="page-historial">
+      <div style="padding: 14px 0 4px; display:flex; gap:8px; flex-wrap:wrap;">
+        <select id="hist-filtro-c" onchange="renderHistorial()" style="flex:1; min-width:130px; padding:10px 12px; font-size:13px;">
+          <option value="">Todos los contratistas</option>
+        </select>
+        <select id="hist-filtro-t" onchange="renderHistorial()" style="flex:1; min-width:100px; padding:10px 12px; font-size:13px;">
+          <option value="">Todo</option>
+          <option value="valor">Solo valores</option>
+          <option value="pago">Solo pagos</option>
+        </select>
+      </div>
+      <div id="lista-historial"></div>
+    </div>
+
+    <!-- PÁGINA: DETALLE CONTRATISTA -->
+    <div class="page" id="page-detalle">
+      <div class="detail-header">
+        <div class="back-btn" onclick="goBack()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </div>
+        <div>
+          <div id="det-nombre" style="font-size:18px; font-weight:600;"></div>
+          <div id="det-oficio" style="font-size:12px; color:var(--text2);"></div>
+        </div>
+      </div>
+      <div id="detalle-body" style="padding: 0 0 16px;"></div>
+    </div>
+
+  </div>
+
+  <!-- NAV BAR -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-resumen" onclick="showPage('resumen')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Resumen</span>
+    </button>
+    <button class="nav-btn" id="nav-historial" onclick="showPage('historial')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      <span>Historial</span>
+    </button>
+  </nav>
+</div>
+
+<!-- SHEET: AGREGAR CONTRATISTA -->
+<div class="sheet-overlay" id="sheet-cont">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Nuevo contratista</div>
+      <button class="sheet-close" onclick="closeSheet('sheet-cont')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Nombre completo *</label><input type="text" id="c-nombre" placeholder="Ej: Carlos Gómez"></div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Especialidad</label><input type="text" id="c-oficio" placeholder="Ej: Electricista"></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input type="tel" id="c-tel" placeholder="310..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notas</label><textarea id="c-notas" placeholder="Datos adicionales..."></textarea></div>
+      <button class="btn btn-accent" onclick="guardarContratista()">Agregar contratista</button>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET: REGISTRAR VALOR -->
+<div class="sheet-overlay" id="sheet-valor">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Registrar valor</div>
+      <button class="sheet-close" onclick="closeSheet('sheet-valor')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Contratista *</label><select id="v-cont"><option value="">Seleccionar...</option></select></div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Fecha *</label><input type="date" id="v-fecha"></div>
+        <div class="form-group"><label class="form-label">Valor $ *</label><input type="number" id="v-monto" placeholder="0" inputmode="numeric"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descripción de la actividad *</label><textarea id="v-desc" placeholder="Ej: Instalación eléctrica piso 2, 10 tomas corriente..."></textarea></div>
+      <button class="btn btn-accent" onclick="guardarValor()">Registrar valor</button>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET: REGISTRAR PAGO -->
+<div class="sheet-overlay" id="sheet-pago">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Registrar pago</div>
+      <button class="sheet-close" onclick="closeSheet('sheet-pago')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Contratista *</label><select id="p-cont"><option value="">Seleccionar...</option></select></div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Fecha *</label><input type="date" id="p-fecha"></div>
+        <div class="form-group"><label class="form-label">Monto $ *</label><input type="number" id="p-monto" placeholder="0" inputmode="numeric"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Medio de pago</label>
+          <select id="p-medio">
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+            <option>Nequi</option>
+            <option>Daviplata</option>
+            <option>Cheque</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Referencia</label><input type="text" id="p-ref" placeholder="Nro. comprobante..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descripción / Concepto</label><textarea id="p-desc" placeholder="Ej: Anticipo inicio obra, pago semana 1..."></textarea></div>
+      <button class="btn btn-accent" onclick="guardarPago()">Registrar pago</button>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET: OPCIONES ADD -->
+<div class="sheet-overlay" id="sheet-add-options">
+  <div class="sheet" style="padding-bottom: calc(20px + var(--safe-bottom));">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">¿Qué quieres agregar?</div>
+      <button class="sheet-close" onclick="closeSheet('sheet-add-options')">✕</button>
+    </div>
+    <div class="sheet-body" style="display:flex; flex-direction:column; gap:10px; padding-bottom:4px;">
+      <button class="btn btn-ghost" style="text-align:left; display:flex; align-items:center; gap:12px;" onclick="closeSheet('sheet-add-options'); setTimeout(()=>openSheet('sheet-cont'),180)">
+        <span style="width:38px;height:38px;border-radius:50%;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <div><div style="font-weight:600;">Contratista nuevo</div><div style="font-size:12px;color:var(--text2);font-weight:400;">Registrar una persona nueva</div></div>
+      </button>
+      <button class="btn btn-ghost" style="text-align:left; display:flex; align-items:center; gap:12px;" onclick="closeSheet('sheet-add-options'); setTimeout(()=>openSheet('sheet-valor'),180)">
+        <span style="width:38px;height:38px;border-radius:50%;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </span>
+        <div><div style="font-weight:600;">Valor acordado</div><div style="font-size:12px;color:var(--text2);font-weight:400;">Cargar trabajo o actividad pactada</div></div>
+      </button>
+      <button class="btn btn-ghost" style="text-align:left; display:flex; align-items:center; gap:12px;" onclick="closeSheet('sheet-add-options'); setTimeout(()=>openSheet('sheet-pago'),180)">
+        <span style="width:38px;height:38px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </span>
+        <div><div style="font-weight:600;">Pago realizado</div><div style="font-size:12px;color:var(--text2);font-weight:400;">Registrar un abono o pago</div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">¿Estás seguro?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn btn-red" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'contratistas_mobile_v2';
+let db = { contratistas: [], valores: [], pagos: [] };
+let currentPage = 'resumen';
+let confirmCallback = null;
+
+async function load() {
+  try {
+    const r = await window.storage.get(KEY);
+    if (r && r.value) db = JSON.parse(r.value);
+  } catch(e) {}
+  renderAll();
+}
+async function save() {
+  try { await window.storage.set(KEY, JSON.stringify(db)); } catch(e) {}
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmtMoney(n) {
+  n = Number(n);
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(n%1000000===0?0:1) + 'M';
+  if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'k';
+  return '$' + n.toLocaleString('es-CO');
+}
+function fmtMoneyFull(n) { return '$' + Number(n).toLocaleString('es-CO', {minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmtDate(d) { if (!d) return ''; const [y,m,dia] = d.split('-'); return `${dia}/${m}/${y}`; }
+function initials(name) { return name.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function getStats(cid) {
+  const total = db.valores.filter(v=>v.cid===cid).reduce((a,v)=>a+Number(v.monto),0);
+  const pagado = db.pagos.filter(p=>p.cid===cid).reduce((a,p)=>a+Number(p.monto),0);
+  return { total, pagado, saldo: total-pagado };
+}
+
+// TOAST
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// SHEETS
+function openSheet(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function openAddSheet() { openSheet('sheet-add-options'); }
+
+// CONFIRM
+function confirm2(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); confirmCallback = null; }
+document.getElementById('confirm-ok').onclick = () => { if(confirmCallback) confirmCallback(); closeConfirm(); };
+
+// PAGES
+function showPage(name, skipHistory) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+  document.getElementById('main-content').scrollTop = 0;
+  currentPage = name;
+  if (name === 'historial') renderHistorial();
+  if (name === 'resumen') renderResumen();
+}
+function goBack() { showPage('resumen'); }
+
+function renderAll() { renderResumen(); updateSelects(); }
+
+function renderResumen() {
+  const globalTotal = db.contratistas.reduce((a,c)=>a+getStats(c.id).total,0);
+  const globalPagado = db.contratistas.reduce((a,c)=>a+getStats(c.id).pagado,0);
+  const globalSaldo = globalTotal - globalPagado;
+  document.getElementById('m-saldo').textContent = fmtMoneyFull(globalSaldo);
+  document.getElementById('m-total').textContent = fmtMoneyFull(globalTotal);
+  document.getElementById('m-pagado').textContent = fmtMoneyFull(globalPagado);
+
+  const el = document.getElementById('lista-resumen');
+  if (db.contratistas.length === 0) {
+    el.innerHTML = `<div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><p>Toca <strong>+ Agregar</strong> para registrar<br>tu primer contratista</p></div>`;
+    return;
+  }
+  el.innerHTML = db.contratistas.map(c => {
+    const s = getStats(c.id);
+    const pct = s.total > 0 ? Math.min(Math.round((s.pagado/s.total)*100), 100) : 0;
+    const fillColor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+    const badge = pct >= 100
+      ? '<span class="badge badge-green">Al día ✓</span>'
+      : pct > 0
+        ? `<span class="badge badge-orange">${pct}%</span>`
+        : s.total > 0
+          ? '<span class="badge badge-red">Pendiente</span>'
+          : '<span class="badge badge-blue">Sin valores</span>';
+    return `<div class="cont-card" onclick="openDetalle('${c.id}')">
+      <div class="cont-top">
+        <div class="avatar">${initials(c.nombre)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="cont-name">${c.nombre}</div>
+          <div class="cont-oficio">${c.oficio||'Sin especialidad'}${c.telefono?' · '+c.telefono:''}</div>
+        </div>
+        ${badge}
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-labels"><span>Pagado ${fmtMoney(s.pagado)} de ${fmtMoney(s.total)}</span><span style="color:var(--red);">Saldo: ${fmtMoney(s.saldo)}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDetalle(cid) {
+  const c = db.contratistas.find(x=>x.id===cid);
+  if (!c) return;
+  const s = getStats(cid);
+  const pct = s.total > 0 ? Math.min(Math.round((s.pagado/s.total)*100),100) : 0;
+  const fillColor = pct>=100?'var(--green)':pct>=50?'var(--orange)':'var(--red)';
+  document.getElementById('det-nombre').textContent = c.nombre;
+  document.getElementById('det-oficio').textContent = (c.oficio||'') + (c.telefono?' · '+c.telefono:'');
+
+  // Movimientos del contratista
+  let movs = [
+    ...db.valores.filter(v=>v.cid===cid).map(v=>({...v, tipo:'valor'})),
+    ...db.pagos.filter(p=>p.cid===cid).map(p=>({...p, tipo:'pago'}))
+  ].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  const movsHTML = movs.length === 0
+    ? '<div class="empty"><p>Sin movimientos aún</p></div>'
+    : movs.map(m => {
+        const isP = m.tipo==='pago';
+        return `<div class="hist-item">
+          <div class="hist-icon ${m.tipo}">
+            ${isP
+              ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
+              : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'}
+          </div>
+          <div class="hist-body">
+            <div class="hist-top">
+              <div class="hist-name">${isP ? (m.medio||'Pago') : 'Valor acordado'}</div>
+              <div class="hist-amount ${m.tipo}">${isP?'':'+'}${fmtMoneyFull(m.monto)}</div>
+            </div>
+            <div class="hist-meta">${fmtDate(m.fecha)}${isP&&m.ref?' · '+m.ref:''}</div>
+            ${m.descripcion?`<div class="hist-desc">${m.descripcion}</div>`:''}
+          </div>
+          <button onclick="event.stopPropagation(); eliminarMov('${m.tipo}','${m.id}')" style="background:none;border:none;color:var(--text3);padding:4px;cursor:pointer;flex-shrink:0;margin-left:4px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>`;
+      }).join('');
+
+  document.getElementById('detalle-body').innerHTML = `
+    <div style="padding:0 16px;">
+      <div class="metrics-row">
+        <div class="metric metric-big">
+          <div><div class="metric-label">Saldo pendiente</div><div class="metric-value red" style="font-size:24px;">${fmtMoneyFull(s.saldo)}</div></div>
+        </div>
+        <div class="metric"><div class="metric-label">Total acordado</div><div class="metric-value blue" style="font-size:16px;">${fmtMoneyFull(s.total)}</div></div>
+        <div class="metric"><div class="metric-label">Total pagado</div><div class="metric-value green" style="font-size:16px;">${fmtMoneyFull(s.pagado)}</div></div>
+      </div>
+      <div style="margin-bottom:6px;">
+        <div class="progress-labels" style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;"><span>Avance</span><span>${pct}%</span></div>
+        <div class="progress-bar" style="height:6px;"><div class="progress-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;">
+        <button class="btn btn-ghost btn-sm" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="presetCont('${cid}','valor')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          + Valor
+        </button>
+        <button class="btn btn-accent btn-sm" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="presetCont('${cid}','pago')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          + Pago
+        </button>
+      </div>
+      ${c.notas?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:16px;">${c.notas}</div>`:''}
+      <div class="section-label" style="margin-top:0;">Movimientos</div>
+      ${movsHTML}
+      <div style="margin-top:16px;">
+        <button class="btn btn-red" onclick="eliminarContratista('${cid}')">Eliminar contratista</button>
+      </div>
+    </div>`;
+
+  showPage('detalle');
+}
+
+function presetCont(cid, tipo) {
+  const sheet = tipo === 'valor' ? 'sheet-valor' : 'sheet-pago';
+  const sel = tipo === 'valor' ? 'v-cont' : 'p-cont';
+  openSheet(sheet);
+  setTimeout(() => { document.getElementById(sel).value = cid; }, 50);
+}
+
+function eliminarMov(tipo, id) {
+  confirm2('Eliminar registro', '¿Eliminar este movimiento? Esta acción no se puede deshacer.', () => {
+    if (tipo==='valor') db.valores = db.valores.filter(v=>v.id!==id);
+    else db.pagos = db.pagos.filter(p=>p.id!==id);
+    save();
+    const cid = [...db.valores, ...db.pagos].find(x=>x.id===id)?.cid;
+    toast('Registro eliminado');
+    renderAll();
+    // Re-render detalle if we're there
+    const detPage = document.getElementById('page-detalle');
+    if (detPage.classList.contains('active')) {
+      const nm = document.getElementById('det-nombre').textContent;
+      const c = db.contratistas.find(x=>x.nombre===nm);
+      if(c) openDetalle(c.id);
+    }
+  });
+}
+
+function eliminarContratista(cid) {
+  const c = db.contratistas.find(x=>x.id===cid);
+  confirm2('Eliminar contratista', `¿Eliminar a ${c?.nombre} y todos sus registros?`, () => {
+    db.contratistas = db.contratistas.filter(x=>x.id!==cid);
+    db.valores = db.valores.filter(v=>v.cid!==cid);
+    db.pagos = db.pagos.filter(p=>p.cid!==cid);
+    save(); renderAll();
+    toast('Contratista eliminado');
+    showPage('resumen');
+  });
+}
+
+function updateSelects() {
+  const opts = '<option value="">Seleccionar...</option>' + db.contratistas.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  ['v-cont','p-cont'].forEach(id => { const el=document.getElementById(id); const v=el.value; el.innerHTML=opts; if(v)el.value=v; });
+  const hopts = '<option value="">Todos los contratistas</option>' + db.contratistas.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  const hf = document.getElementById('hist-filtro-c'); const hv=hf.value; hf.innerHTML=hopts; if(hv)hf.value=hv;
+}
+
+function guardarContratista() {
+  const nombre = document.getElementById('c-nombre').value.trim();
+  if (!nombre) { toast('El nombre es obligatorio','error'); return; }
+  db.contratistas.push({ id: uid(), nombre, oficio: document.getElementById('c-oficio').value.trim(), telefono: document.getElementById('c-tel').value.trim(), notas: document.getElementById('c-notas').value.trim() });
+  save(); renderAll();
+  document.getElementById('c-nombre').value=''; document.getElementById('c-oficio').value=''; document.getElementById('c-tel').value=''; document.getElementById('c-notas').value='';
+  closeSheet('sheet-cont');
+  toast('Contratista agregado ✓');
+}
+
+function guardarValor() {
+  const cid=document.getElementById('v-cont').value, fecha=document.getElementById('v-fecha').value, monto=document.getElementById('v-monto').value, desc=document.getElementById('v-desc').value.trim();
+  if (!cid||!fecha||!monto||!desc) { toast('Completa todos los campos','error'); return; }
+  db.valores.push({ id:uid(), cid, fecha, monto:Number(monto), descripcion:desc });
+  save(); renderAll();
+  document.getElementById('v-monto').value=''; document.getElementById('v-desc').value='';
+  closeSheet('sheet-valor');
+  toast('Valor registrado ✓');
+}
+
+function guardarPago() {
+  const cid=document.getElementById('p-cont').value, fecha=document.getElementById('p-fecha').value, monto=document.getElementById('p-monto').value;
+  if (!cid||!fecha||!monto) { toast('Contratista, fecha y monto son obligatorios','error'); return; }
+  db.pagos.push({ id:uid(), cid, fecha, monto:Number(monto), medio:document.getElementById('p-medio').value, ref:document.getElementById('p-ref').value.trim(), descripcion:document.getElementById('p-desc').value.trim() });
+  save(); renderAll();
+  document.getElementById('p-monto').value=''; document.getElementById('p-ref').value=''; document.getElementById('p-desc').value='';
+  closeSheet('sheet-pago');
+  toast('Pago registrado ✓');
+}
+
+function renderHistorial() {
+  const fc = document.getElementById('hist-filtro-c').value;
+  const ft = document.getElementById('hist-filtro-t').value;
+  let items = [];
+  if (!ft||ft==='valor') db.valores.forEach(v => { if(fc&&v.cid!==fc)return; const c=db.contratistas.find(x=>x.id===v.cid); items.push({...v,tipo:'valor',cNombre:c?.nombre||'?'}); });
+  if (!ft||ft==='pago') db.pagos.forEach(p => { if(fc&&p.cid!==fc)return; const c=db.contratistas.find(x=>x.id===p.cid); items.push({...p,tipo:'pago',cNombre:c?.nombre||'?'}); });
+  items.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const el = document.getElementById('lista-historial');
+  if (!items.length) { el.innerHTML='<div class="empty"><p>Sin registros</p></div>'; return; }
+  el.innerHTML = items.map(i => {
+    const isP = i.tipo==='pago';
+    return `<div class="hist-item">
+      <div class="hist-icon ${i.tipo}">
+        ${isP
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'}
+      </div>
+      <div class="hist-body">
+        <div class="hist-top">
+          <div class="hist-name">${i.cNombre}</div>
+          <div class="hist-amount ${i.tipo}">${fmtMoneyFull(i.monto)}</div>
+        </div>
+        <div class="hist-meta">${fmtDate(i.fecha)} · ${isP?(i.medio||'Pago'):'Valor acordado'}${isP&&i.ref?' · '+i.ref:''}</div>
+        ${i.descripcion?`<div class="hist-desc">${i.descripcion}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Close sheets tapping overlay
+document.querySelectorAll('.sheet-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) closeSheet(el.id); });
+});
+
+// Set today's date
+document.getElementById('v-fecha').value = today();
+document.getElementById('p-fecha').value = today();
+
+load();
+</script>
+</body>
+</html>
